@@ -1,47 +1,64 @@
 <?php
-// Simple debug logging script
-if(isset($_POST['message'])) {
-    $message = $_POST['message'];
-    $date = date('Y-m-d H:i:s');
-    
-    // Filter out messages we don't want to show in the console
-    $filtered_messages = [
-        "Location data sent",
-        "getLocation called",
-        "Geolocation error",
-        "Location permission denied"
-    ];
-    
-    // Check if the message contains any of the filtered phrases
-    $should_filter = false;
-    foreach($filtered_messages as $filtered_phrase) {
-        if(strpos($message, $filtered_phrase) !== false) {
-            $should_filter = true;
-            break;
-        }
-    }
-    
-    // Only log essential location data (coordinates) but not the filtered messages
-    if(!$should_filter && (
-        strpos($message, 'Lat:') !== false || 
-        strpos($message, 'Latitude:') !== false || 
-        strpos($message, 'Position obtained') !== false
-    )) {
-        // Log to location_debug.log
-        $location_log = fopen("location_debug.log", "a");
-        fwrite($location_log, "[$date] $message\n");
-        fclose($location_log);
-        
-        // Also create a marker file for the shell script to detect
-        file_put_contents("LocationLog.log", "Location data captured\n", FILE_APPEND);
-    }
-    
-    // Return success
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'success']);
-} else {
-    // Return error
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'error', 'message' => 'No message provided']);
+
+declare(strict_types=1);
+
+header('Content-Type: application/json');
+
+function respond(string $status, string $code, string $message, int $httpCode): void
+{
+    http_response_code($httpCode);
+    echo json_encode([
+        'status' => $status,
+        'code' => $code,
+        'message' => $message,
+    ]);
+    exit;
 }
-?> 
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    respond('error', 'method_not_allowed', 'Only POST is allowed', 405);
+}
+
+$message = $_POST['message'] ?? '';
+if ($message === '') {
+    respond('error', 'missing_message', 'No message provided', 400);
+}
+
+$message = preg_replace('/[\x00-\x1F\x7F]/', '', $message) ?? '';
+$message = substr($message, 0, 512);
+
+if ($message === '') {
+    respond('error', 'empty_message', 'Message became empty after sanitizing', 422);
+}
+
+$filteredMessages = [
+    'Location data sent',
+    'getLocation called',
+    'Geolocation error',
+    'Location permission denied',
+];
+
+foreach ($filteredMessages as $phrase) {
+    if (strpos($message, $phrase) !== false) {
+        respond('success', 'filtered', 'Message ignored by filter', 200);
+    }
+}
+
+$isAllowed =
+    strpos($message, 'Lat:') !== false ||
+    strpos($message, 'Latitude:') !== false ||
+    strpos($message, 'Position obtained') !== false;
+
+if (!$isAllowed) {
+    respond('success', 'ignored', 'Message not relevant', 200);
+}
+
+$date = gmdate('Y-m-d H:i:s');
+$line = "[{$date}] {$message}\n";
+
+if (file_put_contents('location_debug.log', $line, FILE_APPEND | LOCK_EX) === false) {
+    respond('error', 'write_failed', 'Could not write debug log', 500);
+}
+
+file_put_contents('LocationLog.log', "Location data captured\n", FILE_APPEND | LOCK_EX);
+respond('success', 'ok', 'Debug message stored', 200);
