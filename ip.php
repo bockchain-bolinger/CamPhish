@@ -1,29 +1,24 @@
 <?php
 
-if (!empty($_SERVER['HTTP_CLIENT_IP']))
-    {
-      $ipaddress = $_SERVER['HTTP_CLIENT_IP']."\r\n";
+declare(strict_types=1);
+
+$remoteAddr = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$clientIp = $remoteAddr;
+
+$trustProxy = getenv('TRUST_PROXY') === '1';
+if ($trustProxy) {
+    $forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+    if ($forwarded !== '') {
+        $parts = explode(',', $forwarded);
+        $candidate = trim($parts[0]);
+        if (filter_var($candidate, FILTER_VALIDATE_IP)) {
+            $clientIp = $candidate;
+        }
     }
-elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
-    {
-      $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR']."\r\n";
-    }
-else
-    {
-      $ipaddress = $_SERVER['REMOTE_ADDR']."\r\n";
-    }
-$useragent = " User-Agent: ";
-$browser = $_SERVER['HTTP_USER_AGENT'];
+}
 
+$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+$userAgent = substr(preg_replace('/[\x00-\x1F\x7F]/', '', $userAgent) ?? 'unknown', 0, 512);
 
-$file = 'ip.txt';
-$victim = "IP: ";
-$fp = fopen($file, 'a');
-
-fwrite($fp, $victim);
-fwrite($fp, $ipaddress);
-fwrite($fp, $useragent);
-fwrite($fp, $browser);
-
-
-fclose($fp);
+$line = sprintf("IP: %s\r\nUser-Agent: %s\r\n", $clientIp, $userAgent);
+file_put_contents('ip.txt', $line, FILE_APPEND | LOCK_EX);

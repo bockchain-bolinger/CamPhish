@@ -200,7 +200,7 @@ printf "\e[1;92m[\e[0m+\e[1;92m] Detected OS: $os, Architecture: $arch\n"
 # Windows detection
 if [[ "$windows_mode" == true ]]; then
     printf "\e[1;92m[\e[0m+\e[1;92m] Windows detected, downloading Windows binary...\n"
-    wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -O cloudflared.exe > /dev/null 2>&1
+    wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -O cloudflared.exe > /dev/null 2>&1
     if [[ -e cloudflared.exe ]]; then
         chmod +x cloudflared.exe
         # Create a wrapper script to run the exe
@@ -218,10 +218,10 @@ else
         printf "\e[1;92m[\e[0m+\e[1;92m] macOS detected...\n"
         if [[ "$arch" == "arm64" ]]; then
             printf "\e[1;92m[\e[0m+\e[1;92m] Apple Silicon (M1/M2/M3) detected...\n"
-            wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz -O cloudflared.tgz > /dev/null 2>&1
+            wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz -O cloudflared.tgz > /dev/null 2>&1
         else
             printf "\e[1;92m[\e[0m+\e[1;92m] Intel Mac detected...\n"
-            wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz -O cloudflared.tgz > /dev/null 2>&1
+            wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz -O cloudflared.tgz > /dev/null 2>&1
         fi
         
         if [[ -e cloudflared.tgz ]]; then
@@ -237,23 +237,23 @@ else
         case "$arch" in
             "x86_64")
                 printf "\e[1;92m[\e[0m+\e[1;92m] x86_64 architecture detected...\n"
-                wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared > /dev/null 2>&1
+                wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared > /dev/null 2>&1
                 ;;
             "i686"|"i386")
                 printf "\e[1;92m[\e[0m+\e[1;92m] x86 32-bit architecture detected...\n"
-                wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-386 -O cloudflared > /dev/null 2>&1
+                wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-386 -O cloudflared > /dev/null 2>&1
                 ;;
             "aarch64"|"arm64")
                 printf "\e[1;92m[\e[0m+\e[1;92m] ARM64 architecture detected...\n"
-                wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 -O cloudflared > /dev/null 2>&1
+                wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 -O cloudflared > /dev/null 2>&1
                 ;;
             "armv7l"|"armv6l"|"arm")
                 printf "\e[1;92m[\e[0m+\e[1;92m] ARM architecture detected...\n"
-                wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm -O cloudflared > /dev/null 2>&1
+                wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm -O cloudflared > /dev/null 2>&1
                 ;;
             *)
                 printf "\e[1;92m[\e[0m+\e[1;92m] Architecture not specifically detected ($arch), defaulting to amd64...\n"
-                wget --no-check-certificate https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared > /dev/null 2>&1
+                wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared > /dev/null 2>&1
                 ;;
         esac
         
@@ -328,7 +328,7 @@ printf "\e[1;92m[\e[0m+\e[1;92m] Detected OS: $os, Architecture: $arch\n"
 # Windows detection
 if [[ "$windows_mode" == true ]]; then
     printf "\e[1;92m[\e[0m+\e[1;92m] Windows detected, downloading Windows binary...\n"
-    wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -O ngrok.zip > /dev/null 2>&1
+    wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -O ngrok.zip > /dev/null 2>&1
     if [[ -e ngrok.zip ]]; then
         unzip ngrok.zip > /dev/null 2>&1
         chmod +x ngrok.exe
@@ -343,10 +343,10 @@ else
         printf "\e[1;92m[\e[0m+\e[1;92m] macOS detected...\n"
         if [[ "$arch" == "arm64" ]]; then
             printf "\e[1;92m[\e[0m+\e[1;92m] Apple Silicon (M1/M2/M3) detected...\n"
-            wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-darwin-arm64.zip -O ngrok.zip > /dev/null 2>&1
+            wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-darwin-arm64.zip -O ngrok.zip > /dev/null 2>&1
         else
             printf "\e[1;92m[\e[0m+\e[1;92m] Intel Mac detected...\n"
-            wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-darwin-amd64.zip -O ngrok.zip > /dev/null 2>&1
+            wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-darwin-amd64.zip -O ngrok.zip > /dev/null 2>&1
         fi
         
         if [[ -e ngrok.zip ]]; then
@@ -362,23 +362,23 @@ else
         case "$arch" in
             "x86_64")
                 printf "\e[1;92m[\e[0m+\e[1;92m] x86_64 architecture detected...\n"
-                wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip -O ngrok.zip > /dev/null 2>&1
+                wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip -O ngrok.zip > /dev/null 2>&1
                 ;;
             "i686"|"i386")
                 printf "\e[1;92m[\e[0m+\e[1;92m] x86 32-bit architecture detected...\n"
-                wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-386.zip -O ngrok.zip > /dev/null 2>&1
+                wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-386.zip -O ngrok.zip > /dev/null 2>&1
                 ;;
             "aarch64"|"arm64")
                 printf "\e[1;92m[\e[0m+\e[1;92m] ARM64 architecture detected...\n"
-                wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.zip -O ngrok.zip > /dev/null 2>&1
+                wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.zip -O ngrok.zip > /dev/null 2>&1
                 ;;
             "armv7l"|"armv6l"|"arm")
                 printf "\e[1;92m[\e[0m+\e[1;92m] ARM architecture detected...\n"
-                wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm.zip -O ngrok.zip > /dev/null 2>&1
+                wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm.zip -O ngrok.zip > /dev/null 2>&1
                 ;;
             *)
                 printf "\e[1;92m[\e[0m+\e[1;92m] Architecture not specifically detected ($arch), defaulting to amd64...\n"
-                wget --no-check-certificate https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip -O ngrok.zip > /dev/null 2>&1
+                wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip -O ngrok.zip > /dev/null 2>&1
                 ;;
         esac
         

