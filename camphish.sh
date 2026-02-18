@@ -28,6 +28,14 @@ fi
 
 trap 'printf "\n";stop' 2
 
+# Safety guard: this repository contains dual-use code and is disabled by default.
+# Only run in authorized, legal security-testing environments.
+if [[ "${AUTHORIZED_PENTEST:-}" != "1" ]]; then
+  echo "[SAFETY] Execution blocked. Set AUTHORIZED_PENTEST=1 only for authorized security testing."
+  echo "[SAFETY] Unauthorized phishing/camera/location capture is illegal."
+  exit 1
+fi
+
 banner() {
 clear
 printf "\e[1;92m  _______  _______  _______  \e[0m\e[1;77m_______          _________ _______          \e[0m\n"
