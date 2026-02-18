@@ -73,16 +73,4 @@ Ergebnis: Keine Syntaxfehler in den geprüften Dateien.
 
 ## Einschränkung
 Der Audit ist ein lokaler statischer Check. Kein End-to-End-Test mit realem Tunnel/Browser-Flow durchgeführt.
-
-## Umgesetzte Sofortmaßnahmen (Hardening)
-1. Input-Validierung und einheitliche JSON-Fehlerobjekte in `location.php`, `post.php`, `debug_log.php` ergänzt.
-2. Dateischreibzugriffe auf `file_put_contents(..., LOCK_EX)` umgestellt (Race-Condition-Risiko reduziert).
-3. Unsichere Download-Option `--no-check-certificate` aus `camphish.sh` entfernt.
-4. `ip.php` auf sauberere IP-Ermittlung mit optionalem Proxy-Trust (`TRUST_PROXY=1`) umgestellt.
-5. Dateirechte für neue `saved.locations.txt` auf `0640` gehärtet.
-
-## Noch offene Optimierungen
-- SHA256-Prüfsummen-Validierung der heruntergeladenen Binaries.
-- Rate-Limiting pro Quell-IP (z. B. Token-Bucket über temp-Datei/Redis).
-- Umstieg von Dateispeicherung auf DB-Backed Persistenz.
-- End-to-End- und Negativtests in CI.
+master
